@@ -26,6 +26,7 @@
 | 狀態管理 | Zustand | 輕量，適合圖這種複雜本地狀態 |
 | 後端框架 | NestJS（TypeScript） | 天然 OOP、依賴注入、模組化，符合可擴展性需求 |
 | 資料庫 | SQLite（TypeORM） | 輕量易部署，WAL 模式處理並發，日後可換 PostgreSQL |
+| 並發控制 | SQLite WAL + async-mutex | 不引入 Redis，以輕量 mutex 串行化寫入操作 |
 | AI 整合 | OpenRouter API | 統一入口，支援多家模型，可篩選免費模型 |
 | 排程 | NestJS @Cron | 內建排程，無需額外依賴 |
 | 部署 | Docker（第二期） / batch 腳本（第一期） | 先求能跑，後求標準化 |
@@ -96,25 +97,37 @@ class Blueprint {
 enum NodeType   { ACTOR, EVENT, INTEREST }
 enum NodeSize   { SMALL, LARGE }
 enum NodeStatus { ACTIVE, VALIDATED, INVALIDATED }
+enum TimeScale  { SHORT, MEDIUM, LONG }
 
 class Node {
   id: string
   blueprintId: string
   type: NodeType
-  size: NodeSize
+  size: NodeSize            // 業務屬性：決定節點是否可展開子節點、是否支援 AI 展開
   status: NodeStatus
   title: string
   description: string
-  weight: number          // 視覺大小/亮度，初始值 1.0，範圍 0.1 ~ 3.0
+  weight: number            // 視覺驅動值，初始 1.0，範圍 0.1 ~ 3.0，由回顧機制動態調整
+  timeScale: TimeScale      // 此節點預測的時間尺度，用於回顧機制的到期門檻計算
   createdBy: 'user' | 'ai'
-  parentNodeId?: string   // 小節點歸屬於哪個大節點
+  parentNodeId?: string     // 小節點歸屬於哪個大節點（SMALL 節點專用）
   createdAt: Date
 }
 ```
 
 **節點分類說明：**
-- **大節點（LARGE）**：里程碑事件，代表一個方向上的重要轉折
-- **小節點（SMALL）**：大節點的組成部分，可以是具體人物（ACTOR）、具體行動（EVENT）、或利益動機（INTEREST）
+- **大節點（LARGE）**：里程碑事件，代表一個方向上的重要轉折；可展開子節點，支援 AI 展開功能
+- **小節點（SMALL）**：大節點的組成部分，可以是具體人物（ACTOR）、具體行動（EVENT）、或利益動機（INTEREST）；不可再有子節點（層級上限為兩層）
+
+**`NodeSize` 與 `weight` 的關係：**
+- `NodeSize` 是業務屬性，決定節點的功能權限（LARGE 才能展開子節點）
+- `weight` 是 UI 視覺驅動值，動態決定節點在畫布上顯示的大小與亮度，與 `NodeSize` 無關
+
+**`parentNodeId` 約束規則：**
+- 只有 `NodeSize.SMALL` 的節點才可設定 `parentNodeId`
+- `parentNodeId` 所指向的父節點必須是 `NodeSize.LARGE`
+- 此約束在 Service 層驗證（非 DB constraint，以維持彈性）
+- 刪除父節點時，子節點執行 cascade delete（一併刪除所有子節點）
 
 ---
 
@@ -146,19 +159,39 @@ class Theory {
 ```typescript
 enum Direction  { PROMOTES, INHIBITS, NEUTRAL }
 enum Magnitude  { SMALL, MEDIUM, LARGE }
-enum TimeScale  { SHORT, MEDIUM, LONG }
 
 class Edge {
   id: string
   blueprintId: string
   sourceNodeId: string
   targetNodeId: string
-  theoryIds: string[]       // 支撐這條連結的理論（可多個，有機組合）
+  theoryIds: string[]       // 支撐這條連結的理論（可多個，有機組合；允許空陣列）
   direction: Direction
   magnitude: Magnitude
-  timeScale: TimeScale
   reasoning: string         // AI 或使用者對這條連結的說明
   createdBy: 'user' | 'ai'
+}
+```
+
+**`theoryIds` 規則：**
+- 允許為空陣列（使用者可建立無理論支撐的連結）
+- AI 自動建立的 Edge，`theoryIds` 填入觸發該次 AI 操作時使用者選定的理論 ID；若無選定理論則為空陣列
+- 前端不強制要求，但 UI 在 `theoryIds` 為空時顯示提示（非錯誤）
+
+---
+
+### AIModel（AI 模型）
+
+```typescript
+enum ModelTier { TOP, FREE }
+
+class AIModel {
+  id: string
+  modelId: string         // OpenRouter 識別碼，例如 "openai/gpt-4o"
+  displayName: string
+  tier: ModelTier
+  pricingPrompt: string   // 每 token 費用（字串，保留原始精度）
+  updatedAt: Date
 }
 ```
 
@@ -219,6 +252,21 @@ abstract class AbstractAIService {
   protected getActiveModel(): string
   private readonly gateway: IAIGateway  // 子類別不可直接存取
 }
+
+// 統一的 AI 錯誤類型，execute() 內部捕捉並包裝所有來自 gateway 的錯誤
+class AIException extends Error {
+  constructor(
+    public readonly operation: AIOperation,
+    public readonly sessionId: string,
+    public readonly cause: unknown,
+  ) { super(`AI operation ${operation} failed`) }
+}
+```
+
+`execute()` 的錯誤處理合約：
+- OpenRouter 呼叫失敗（網路錯誤、rate limit、模型不可用）一律拋出 `AIException`
+- 子類別不需自行捕捉，讓 `AIException` 冒泡至 NestJS 的 Global Exception Filter
+- Exception Filter 將 `AIException` 轉換為 HTTP 503 回應，格式為 `{ error: string, sessionId: string }`
 ```
 
 ### AI 功能方法清單
@@ -230,7 +278,7 @@ abstract class AbstractAIService {
 
 **驗證（VerificationAIService）**
 - `reviewNodeValidity(nodeId, context)` — 單一節點驗證，回傳 verdict + 佐證說明
-- `batchReviewBlueprint(blueprintId)` — 批次驗證整張藍圖
+- `batchReviewBlueprint(blueprintId)` — 對藍圖內所有活躍節點逐一呼叫 `reviewNodeValidity`，為 `WeeklyReviewScheduler` 的入口；也可透過 REST API 手動觸發
 - `updateNodeWeight(nodeId, verdict)` — 根據判定結果更新 weight
 
 **發想（IdeationAIService）**
@@ -242,6 +290,66 @@ abstract class AbstractAIService {
 - `suggestEdges(nodeId)` — 建議應與哪些現有節點連結
 - `explainEdge(sourceId, targetId, theoryIds)` — 生成連結的 reasoning 說明
 - `detectConflictingEdges(blueprintId)` — 偵測圖中邏輯矛盾的連結
+
+### IAIGateway 介面定義
+
+所有 AI 呼叫統一透過此介面，不得繞過：
+
+```typescript
+interface IAIGateway {
+  /**
+   * 發送一次完整的對話請求
+   * @param model - OpenRouter 模型識別碼，例如 "openai/gpt-4o"
+   * @param messages - 完整的對話訊息陣列（含 system / user / assistant 角色）
+   * @returns AI 回覆的文字內容
+   */
+  chat(model: string, messages: Message[]): Promise<string>
+
+  /**
+   * 發送串流對話請求，逐步回傳文字片段
+   * @param model - OpenRouter 模型識別碼
+   * @param messages - 完整的對話訊息陣列
+   * @returns 非同步迭代器，每次 yield 一個文字片段
+   */
+  streamChat(model: string, messages: Message[]): AsyncIterableIterator<string>
+}
+
+interface Message {
+  role: 'system' | 'user' | 'assistant'
+  content: string
+}
+
+interface AIResponse {
+  content: string
+  tokensUsed: number
+  modelUsed: string
+}
+```
+
+### Theory 驅動 Prompt 組合機制
+
+`TheoryComposer` 負責將使用者選定的多個 Theory 組合成 system prompt 注入：
+
+```
+[固定系統角色]
+你是一個地緣政治分析師，擅長因果推演與預測評估。
+
+[動態理論透鏡] ← 由 TheoryComposer 根據 theoryIds 組合
+{theory_1.promptFragment}
+
+{theory_2.promptFragment}
+
+[任務指令] ← 由各 AIService 子類別提供
+{operation_specific_instruction}
+
+[上下文資料] ← 由各 AIService 子類別從資料庫查詢後注入
+{relevant_nodes_and_edges}
+```
+
+`TheoryComposer` 的組合規則：
+- 多個 Theory 的 `promptFragment` 以換行分隔依序注入
+- 若未選擇任何 Theory，則只使用固定系統角色
+- 組合結果作為 `PromptContext.systemPrompt` 傳入 `execute()`
 
 ### 模型管理（ModelManager）
 
@@ -255,18 +363,28 @@ abstract class AbstractAIService {
 
 ## 六、回顧機制
 
+### 觸發方式
+
+- **自動**：`WeeklyReviewScheduler` 每週日凌晨 2:00 觸發，呼叫 `batchReviewBlueprint()` 對所有藍圖執行
+- **手動**：`POST /api/review/blueprints/:blueprintId` — 立即觸發指定藍圖的回顧，回傳 `{ jobId: string, startedAt: Date }`（非同步執行，前端可透過 `GET /api/review/jobs/:jobId` 查詢進度）
+
 ### 流程
 
 ```
-WeeklyReviewScheduler（每週日凌晨 2:00）
+WeeklyReviewScheduler（每週日凌晨 2:00）或手動 API
     ↓
-ReviewOrchestrator.runBlueprintReview(blueprintId)
-    ↓ 對每個活躍節點
+VerificationAIService.batchReviewBlueprint(blueprintId)
+    ↓ 對每個活躍節點逐一執行
 VerificationAIService.reviewNodeValidity(nodeId, context)
     ↓
-ReviewEvaluator.calculateNewWeight(verdict, currentWeight, timeScale, weeksSinceCreation)
+ReviewEvaluator.calculateNewWeight(
+  verdict,
+  currentWeight,
+  node.timeScale,          ← 從 Node 自身的 timeScale 欄位取得
+  weeksSinceCreation
+)
     ↓
-NodeRepository.updateWeight(nodeId, newWeight)
+NodeRepository.updateWeight(nodeId, newWeight)（透過 DatabaseWriteService.write()）
     ↓
 ReviewRecord 寫入資料庫
 ```
@@ -347,7 +465,29 @@ ReviewRecord 寫入資料庫
 
 ## 八、並發處理
 
-SQLite 啟用 WAL（Write-Ahead Logging）模式：讀取操作不阻塞，寫入操作透過 NestJS Bull Queue 排隊處理，確保多人同時操作時資料一致性。
+SQLite 啟用 WAL（Write-Ahead Logging）模式，讀取操作不阻塞寫入。寫入操作透過 `async-mutex` 套件的 `Mutex` 類別串行化，不引入 Redis 或 Bull Queue，維持輕量部署原則。
+
+```typescript
+// DatabaseWriteService 統一管理所有寫入操作
+class DatabaseWriteService {
+  private readonly mutex = new Mutex()
+
+  /**
+   * 串行化執行寫入操作，確保同一時間只有一個寫入在進行
+   * @param operation - 要執行的寫入函式
+   */
+  async write<T>(operation: () => Promise<T>): Promise<T> {
+    const release = await this.mutex.acquire()
+    try {
+      return await operation()
+    } finally {
+      release()
+    }
+  }
+}
+```
+
+所有 Repository 的寫入方法（create / update / delete）必須透過 `DatabaseWriteService.write()` 執行。讀取操作可直接存取，無需經過 mutex。
 
 ---
 
@@ -369,7 +509,22 @@ docker compose up
 
 ---
 
-## 十、擴展性考量
+## 十、shared/ 型別分層規則
+
+`shared/` 只放**前後端都需要的純型別定義（DTO 與 enum）**，不放 TypeORM Entity（Entity 只屬於後端）。
+
+| 放在 shared/ | 不放在 shared/ |
+|-------------|---------------|
+| enum（NodeType、Direction 等） | TypeORM Entity（含裝飾器） |
+| DTO（CreateNodeDto、UpdateEdgeDto） | Repository class |
+| 回應型別（ApiResponse、AIResponse） | NestJS Service / Controller |
+| 前後端共用介面（IAIGateway 的 Message 型別） | 資料庫遷移檔案 |
+
+前端的 `client/src/types/` 只做 re-export，不另外定義型別。
+
+---
+
+## 十一、擴展性考量
 
 - `IAIGateway` 抽象化，日後替換 AI 供應商只需新增 Gateway 實作
 - 各 NestJS 模組完全獨立，新增功能不影響現有模組
