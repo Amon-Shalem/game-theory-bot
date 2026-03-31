@@ -2,6 +2,34 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+---
+
+## 進度追蹤（Context 中斷後從這裡繼續）
+
+> **如何繼續：** 找到第一個未勾選的 Task，繼續執行。所有 Task 完成後執行 Task 17 驗證。
+
+| Task | 說明 | 狀態 |
+|------|------|------|
+| Task 1 | Monorepo 根目錄設定 | ⬜ 未開始 |
+| Task 2 | Shared 型別 Package | ⬜ 未開始 |
+| Task 3 | NestJS 後端骨架 | ⬜ 未開始 |
+| Task 4 | TypeORM + SQLite 設定與 Entities | ⬜ 未開始 |
+| Task 5 | DatabaseWriteService（並發控制） | ⬜ 未開始 |
+| Task 6 | Blueprint 模組 CRUD | ⬜ 未開始 |
+| Task 7 | Node 模組 CRUD（含 parentNodeId 約束） | ⬜ 未開始 |
+| Task 8 | Theory 模組 CRUD + 預設理論植入 | ⬜ 未開始 |
+| Task 9 | Edge 模組 CRUD | ⬜ 未開始 |
+| Task 10 | React 前端骨架 | ⬜ 未開始 |
+| Task 11 | 前端 API 服務層 | ⬜ 未開始 |
+| Task 12 | Zustand 狀態管理 | ⬜ 未開始 |
+| Task 13 | 藍圖列表頁面 | ⬜ 未開始 |
+| Task 14 | React Flow 畫布與自訂節點元件 | ⬜ 未開始 |
+| Task 15 | 畫布頁面與節點建立面板 | ⬜ 未開始 |
+| Task 16 | start.bat 啟動腳本 | ⬜ 未開始 |
+| Task 17 | 全體測試執行確認 | ⬜ 未開始 |
+
+---
+
 **Goal:** 建立 Monorepo 基礎架構、所有資料模型的 TypeORM Entity、CRUD API、以及可在瀏覽器中操作藍圖與節點的基本 React Flow 畫布。
 
 **Architecture:** Monorepo（npm workspaces）分為三個 package：`shared`（純型別）、`server`（NestJS + TypeORM + SQLite）、`client`（React + React Flow + Zustand）。共用型別在 `shared` 統一定義，前後端各自引用。後端所有寫入操作透過 `DatabaseWriteService`（async-mutex）串行化。
