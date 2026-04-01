@@ -14,6 +14,15 @@ interface CanvasState {
   addEdge: (dto: CreateEdgeDto) => Promise<void>
   removeEdge: (id: string) => Promise<void>
   selectNode: (id: string | null) => void
+
+  /** 純 state 操作：新增節點到 store（不呼叫 API） */
+  addNodeToStore: (node: NodeDto) => void
+  /** 純 state 操作：從 store 移除節點，不連帶移除邊（不呼叫 API） */
+  removeNodeFromStore: (id: string) => void
+  /** 純 state 操作：新增邊到 store（不呼叫 API） */
+  addEdgeToStore: (edge: EdgeDto) => void
+  /** 純 state 操作：從 store 移除邊（不呼叫 API） */
+  removeEdgeFromStore: (id: string) => void
 }
 
 /** 目前藍圖的畫布狀態（節點 + 連結） */
@@ -56,4 +65,17 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   },
 
   selectNode: (id) => set({ selectedNodeId: id }),
+
+  addNodeToStore: (node) => set(state => ({ nodes: [...state.nodes, node] })),
+
+  /** 只移除節點，不連帶移除邊（邊由 Command 自行處理） */
+  removeNodeFromStore: (id) => set(state => ({
+    nodes: state.nodes.filter(n => n.id !== id),
+  })),
+
+  addEdgeToStore: (edge) => set(state => ({ edges: [...state.edges, edge] })),
+
+  removeEdgeFromStore: (id) => set(state => ({
+    edges: state.edges.filter(e => e.id !== id),
+  })),
 }))
