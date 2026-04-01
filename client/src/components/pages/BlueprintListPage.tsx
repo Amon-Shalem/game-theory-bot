@@ -26,7 +26,10 @@ export function BlueprintListPage() {
     <div style={{ padding: '24px', maxWidth: '900px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>Game Theory Bot</h1>
-        <button onClick={() => setShowForm(true)}>+ 新增藍圖</button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => setShowForm(true)}>+ 新增藍圖</button>
+          <button onClick={() => navigate('/settings')}>Settings</button>
+        </div>
       </div>
 
       {showForm && (
