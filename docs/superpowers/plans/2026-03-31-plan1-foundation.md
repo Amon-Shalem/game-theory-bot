@@ -10,23 +10,23 @@
 
 | Task | 說明 | 狀態 |
 |------|------|------|
-| Task 1 | Monorepo 根目錄設定 | ⬜ 未開始 |
-| Task 2 | Shared 型別 Package | ⬜ 未開始 |
-| Task 3 | NestJS 後端骨架 | ⬜ 未開始 |
-| Task 4 | TypeORM + SQLite 設定與 Entities | ⬜ 未開始 |
-| Task 5 | DatabaseWriteService（並發控制） | ⬜ 未開始 |
-| Task 6 | Blueprint 模組 CRUD | ⬜ 未開始 |
-| Task 7 | Node 模組 CRUD（含 parentNodeId 約束） | ⬜ 未開始 |
-| Task 8 | Theory 模組 CRUD + 預設理論植入 | ⬜ 未開始 |
-| Task 9 | Edge 模組 CRUD | ⬜ 未開始 |
-| Task 10 | React 前端骨架 | ⬜ 未開始 |
-| Task 11 | 前端 API 服務層 | ⬜ 未開始 |
-| Task 12 | Zustand 狀態管理 | ⬜ 未開始 |
-| Task 13 | 藍圖列表頁面 | ⬜ 未開始 |
-| Task 14 | React Flow 畫布與自訂節點元件 | ⬜ 未開始 |
-| Task 15 | 畫布頁面與節點建立面板 | ⬜ 未開始 |
-| Task 16 | start.bat 啟動腳本 | ⬜ 未開始 |
-| Task 17 | 全體測試執行確認 | ⬜ 未開始 |
+| Task 1 | Monorepo 根目錄設定 | ✅ 完成 |
+| Task 2 | Shared 型別 Package | ✅ 完成 |
+| Task 3 | NestJS 後端骨架 | ✅ 完成 |
+| Task 4 | TypeORM + SQLite 設定與 Entities | ✅ 完成 |
+| Task 5 | DatabaseWriteService（並發控制） | ✅ 完成 |
+| Task 6 | Blueprint 模組 CRUD | ✅ 完成 |
+| Task 7 | Node 模組 CRUD（含 parentNodeId 約束） | ✅ 完成 |
+| Task 8 | Theory 模組 CRUD + 預設理論植入 | ✅ 完成 |
+| Task 9 | Edge 模組 CRUD | ✅ 完成 |
+| Task 10 | React 前端骨架 | ✅ 完成 |
+| Task 11 | 前端 API 服務層 | ✅ 完成 |
+| Task 12 | Zustand 狀態管理 | ✅ 完成 |
+| Task 13 | 藍圖列表頁面 | ✅ 完成 |
+| Task 14 | React Flow 畫布與自訂節點元件 | ✅ 完成 |
+| Task 15 | 畫布頁面與節點建立面板 | ✅ 完成 |
+| Task 16 | start.bat 啟動腳本 | ✅ 完成 |
+| Task 17 | 全體測試執行確認 | ✅ 完成 |
 
 ---
 
