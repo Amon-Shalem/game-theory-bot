@@ -1,5 +1,7 @@
 import React from 'react'
 import { useCanvasStore } from '../../stores/canvas.store'
+import { useHistoryStore } from '../../stores/history.store'
+import { RemoveNodeCommand } from '../../commands'
 
 interface Props {
   nodeId: string
@@ -8,7 +10,7 @@ interface Props {
 
 /** 點擊節點後顯示的側邊資訊面板（Plan 2 會加入 AI 功能） */
 export function NodeInfoPanel({ nodeId, blueprintId }: Props) {
-  const { nodes, edges, removeNode, selectNode } = useCanvasStore()
+  const { nodes, edges, selectNode } = useCanvasStore()
   const node = nodes.find(n => n.id === nodeId)
   const nodeEdges = edges.filter(e => e.sourceNodeId === nodeId || e.targetNodeId === nodeId)
 
@@ -38,7 +40,12 @@ export function NodeInfoPanel({ nodeId, blueprintId }: Props) {
 
       <hr />
       <button
-        onClick={async () => { await removeNode(nodeId) }}
+        onClick={async () => {
+          const { executeCommand } = useHistoryStore.getState()
+          const success = await executeCommand(new RemoveNodeCommand(nodeId))
+          // 只在刪除成功時才關閉面板
+          if (success) selectNode(null)
+        }}
         style={{ color: 'red' }}
       >
         刪除此節點

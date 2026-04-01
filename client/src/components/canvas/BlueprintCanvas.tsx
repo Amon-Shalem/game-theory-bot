@@ -5,6 +5,8 @@ import {
   Connection, Node, Edge,
 } from '@xyflow/react'
 import { useCanvasStore } from '../../stores/canvas.store'
+import { useHistoryStore } from '../../stores/history.store'
+import { AddEdgeCommand } from '../../commands'
 import { LargeNode } from './LargeNode'
 import { SmallNode } from './SmallNode'
 import { CausalEdge } from './CausalEdge'
@@ -28,7 +30,7 @@ interface Props {
  * 將 canvasStore 的 NodeDto[] / EdgeDto[] 轉換為 React Flow 格式
  */
 export function BlueprintCanvas({ blueprintId }: Props) {
-  const { nodes: storeNodes, edges: storeEdges, loadCanvas, selectNode, addEdge: storeAddEdge } = useCanvasStore()
+  const { nodes: storeNodes, edges: storeEdges, loadCanvas, selectNode } = useCanvasStore()
 
   const flowNodes: Node[] = storeNodes.map((n, idx) => ({
     id: n.id,
@@ -53,16 +55,17 @@ export function BlueprintCanvas({ blueprintId }: Props) {
   const onConnect = useCallback(
     (connection: Connection) => {
       if (!connection.source || !connection.target) return
-      storeAddEdge({
+      const { executeCommand } = useHistoryStore.getState()
+      executeCommand(new AddEdgeCommand({
         blueprintId,
         sourceNodeId: connection.source,
         targetNodeId: connection.target,
         direction: Direction.PROMOTES,
         magnitude: Magnitude.MEDIUM,
         theoryIds: [],
-      })
+      }))
     },
-    [blueprintId, storeAddEdge]
+    [blueprintId]
   )
 
   const onNodeClick = useCallback(

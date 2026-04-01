@@ -1,33 +1,61 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { BlueprintCanvas } from '../canvas/BlueprintCanvas'
 import { NodeInfoPanel } from '../panels/NodeInfoPanel'
 import { useCanvasStore } from '../../stores/canvas.store'
+import { useHistoryStore } from '../../stores/history.store'
+import { AddNodeCommand } from '../../commands'
 import { NodeType, NodeSize, TimeScale } from '../../types'
 
 /** 畫布主頁面 — 包含工具列、React Flow 畫布、節點資訊面板 */
 export function CanvasPage() {
   const { blueprintId } = useParams<{ blueprintId: string }>()
   const navigate = useNavigate()
-  const { selectedNodeId, addNode } = useCanvasStore()
+  const { selectedNodeId } = useCanvasStore()
+  const { undoStack, redoStack, undo, redo, clearHistory } = useHistoryStore()
   const [showAddForm, setShowAddForm] = useState(false)
   const [newNodeTitle, setNewNodeTitle] = useState('')
   const [newNodeType, setNewNodeType] = useState<NodeType>(NodeType.EVENT)
   const [newNodeSize, setNewNodeSize] = useState<NodeSize>(NodeSize.LARGE)
   const [newTimeScale, setNewTimeScale] = useState<TimeScale>(TimeScale.MEDIUM)
 
+  // 藍圖切換時清空歷史
+  useEffect(() => {
+    clearHistory()
+  }, [blueprintId, clearHistory])
+
+  // 鍵盤快捷鍵 Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCtrlOrCmd = e.ctrlKey || e.metaKey
+      if (isCtrlOrCmd && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+      } else if (
+        (isCtrlOrCmd && e.key === 'y') ||
+        (isCtrlOrCmd && e.shiftKey && e.key.toLowerCase() === 'z')
+      ) {
+        e.preventDefault()
+        redo()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undo, redo])
+
   if (!blueprintId) return <div>找不到藍圖</div>
 
   const handleAddNode = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newNodeTitle.trim()) return
-    await addNode({
+    const { executeCommand } = useHistoryStore.getState()
+    await executeCommand(new AddNodeCommand({
       blueprintId,
       type: newNodeType,
       size: newNodeSize,
       title: newNodeTitle.trim(),
       timeScale: newTimeScale,
-    })
+    }))
     setNewNodeTitle('')
     setShowAddForm(false)
   }
@@ -38,6 +66,8 @@ export function CanvasPage() {
       <div style={{ padding: '8px 16px', borderBottom: '1px solid #ddd', display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button onClick={() => navigate('/')}>← 返回列表</button>
         <button onClick={() => setShowAddForm(!showAddForm)}>+ 新增節點</button>
+        <button onClick={() => undo()} disabled={undoStack.length === 0} title="Undo (Ctrl+Z)">Undo</button>
+        <button onClick={() => redo()} disabled={redoStack.length === 0} title="Redo (Ctrl+Y)">Redo</button>
       </div>
 
       {/* 新增節點表單 */}
