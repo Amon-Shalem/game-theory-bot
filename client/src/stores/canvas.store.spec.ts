@@ -114,4 +114,17 @@ describe('useCanvasStore', () => {
     useCanvasStore.getState().selectNode(null)
     expect(useCanvasStore.getState().selectedNodeId).toBeNull()
   })
+
+  it('updateEdgeInStore 替換 store 中對應的 edge', () => {
+    const existingEdge: EdgeDto = {
+      id: 'e-1', blueprintId: 'bp-1', sourceNodeId: 'n-1', targetNodeId: 'n-2',
+      theoryIds: [], direction: Direction.PROMOTES, magnitude: Magnitude.MEDIUM,
+      reasoning: '', createdBy: 'user',
+    }
+    useCanvasStore.setState({ edges: [existingEdge] })
+    const updated: EdgeDto = { ...existingEdge, direction: Direction.INHIBITS, magnitude: Magnitude.LARGE }
+    useCanvasStore.getState().updateEdgeInStore(updated)
+    expect(useCanvasStore.getState().edges[0].direction).toBe(Direction.INHIBITS)
+    expect(useCanvasStore.getState().edges[0].magnitude).toBe(Magnitude.LARGE)
+  })
 })

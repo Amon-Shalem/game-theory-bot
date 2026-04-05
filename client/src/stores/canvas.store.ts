@@ -23,6 +23,8 @@ interface CanvasState {
   addEdgeToStore: (edge: EdgeDto) => void
   /** 純 state 操作：從 store 移除邊（不呼叫 API） */
   removeEdgeFromStore: (id: string) => void
+  /** 純 state 操作：更新 store 中的邊（不呼叫 API） */
+  updateEdgeInStore: (edge: EdgeDto) => void
 }
 
 /** 目前藍圖的畫布狀態（節點 + 連結） */
@@ -77,5 +79,9 @@ export const useCanvasStore = create<CanvasState>((set) => ({
 
   removeEdgeFromStore: (id) => set(state => ({
     edges: state.edges.filter(e => e.id !== id),
+  })),
+
+  updateEdgeInStore: (edge) => set(state => ({
+    edges: state.edges.map(e => e.id === edge.id ? edge : e),
   })),
 }))
