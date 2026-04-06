@@ -86,6 +86,7 @@ export function BlueprintCanvas({
   const handleNodeContextMenu = useCallback(
     (e: React.MouseEvent, node: Node) => {
       e.preventDefault()
+      // 無需 stopPropagation：onNodeContextMenu 與 onNodeClick 是不同事件，不會互相觸發
       onNodeRightClick(node.id, e.clientX, e.clientY)
     },
     [onNodeRightClick]
