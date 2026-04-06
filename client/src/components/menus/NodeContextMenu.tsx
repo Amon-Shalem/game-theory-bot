@@ -51,7 +51,13 @@ export function NodeContextMenu({
       >
         新增子節點
       </button>
-      <button style={MENU_ITEM_STYLE} onClick={() => onDelete(nodeId)}>
+      <button
+        style={MENU_ITEM_STYLE}
+        onClick={() => {
+          onClose()
+          onDelete(nodeId)
+        }}
+      >
         刪除節點
       </button>
       {nodeSize === NodeSize.LARGE && (

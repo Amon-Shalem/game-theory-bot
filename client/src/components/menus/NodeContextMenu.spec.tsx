@@ -49,9 +49,10 @@ describe('NodeContextMenu', () => {
     expect(baseProps.onAddChild).toHaveBeenCalledWith('n-1')
   })
 
-  it('點擊「刪除節點」呼叫 onDelete', () => {
+  it('點擊「刪除節點」呼叫 onClose 並執行 onDelete', () => {
     render(<NodeContextMenu {...baseProps} />)
     fireEvent.click(screen.getByText('刪除節點'))
+    expect(baseProps.onClose).toHaveBeenCalled()
     expect(baseProps.onDelete).toHaveBeenCalledWith('n-1')
   })
 })
