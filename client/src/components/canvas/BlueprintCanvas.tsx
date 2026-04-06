@@ -1,16 +1,14 @@
 import React, { useEffect, useCallback } from 'react'
 import {
   ReactFlow, Background, Controls, MiniMap,
-  addEdge, useNodesState, useEdgesState,
+  useNodesState, useEdgesState,
   Connection, Node, Edge,
 } from '@xyflow/react'
 import { useCanvasStore } from '../../stores/canvas.store'
-import { useHistoryStore } from '../../stores/history.store'
-import { AddEdgeCommand } from '../../commands'
 import { LargeNode } from './LargeNode'
 import { SmallNode } from './SmallNode'
 import { CausalEdge } from './CausalEdge'
-import { NodeDto, NodeSize, Direction, Magnitude } from '../../types'
+import { NodeSize } from '../../types'
 
 const NODE_TYPES = {
   large: LargeNode,
@@ -23,13 +21,28 @@ const EDGE_TYPES = {
 
 interface Props {
   blueprintId: string
+  /** 使用者完成連線拖拽後通知 CanvasPage，由 CanvasPage 開啟 EdgeSettingsModal */
+  onConnectionAttempt: (connection: Connection) => void
+  /** 點擊 edge（onEdgeContextMenu 觸發時需 stopPropagation 阻止此事件） */
+  onEdgeClick: (edgeId: string) => void
+  /** 右鍵節點 */
+  onNodeRightClick: (nodeId: string, x: number, y: number) => void
+  /** 右鍵 edge */
+  onEdgeRightClick: (edgeId: string, x: number, y: number) => void
 }
 
 /**
  * 藍圖畫布主元件
- * 將 canvasStore 的 NodeDto[] / EdgeDto[] 轉換為 React Flow 格式
+ * 負責渲染 React Flow 並將互動事件向上通知 CanvasPage
+ * 不自行管理 Modal / ContextMenu 狀態
  */
-export function BlueprintCanvas({ blueprintId }: Props) {
+export function BlueprintCanvas({
+  blueprintId,
+  onConnectionAttempt,
+  onEdgeClick,
+  onNodeRightClick,
+  onEdgeRightClick,
+}: Props) {
   const { nodes: storeNodes, edges: storeEdges, loadCanvas, selectNode } = useCanvasStore()
 
   const flowNodes: Node[] = storeNodes.map((n, idx) => ({
@@ -48,29 +61,43 @@ export function BlueprintCanvas({ blueprintId }: Props) {
   }))
 
   const [nodes, , onNodesChange] = useNodesState(flowNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(flowEdges)
+  const [edges, , onEdgesChange] = useEdgesState(flowEdges)
 
   useEffect(() => { loadCanvas(blueprintId) }, [blueprintId, loadCanvas])
 
   const onConnect = useCallback(
     (connection: Connection) => {
       if (!connection.source || !connection.target) return
-      const { executeCommand } = useHistoryStore.getState()
-      executeCommand(new AddEdgeCommand({
-        blueprintId,
-        sourceNodeId: connection.source,
-        targetNodeId: connection.target,
-        direction: Direction.PROMOTES,
-        magnitude: Magnitude.MEDIUM,
-        theoryIds: [],
-      }))
+      onConnectionAttempt(connection)
     },
-    [blueprintId]
+    [onConnectionAttempt]
   )
 
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => { selectNode(node.id) },
     [selectNode]
+  )
+
+  const handleEdgeClick = useCallback(
+    (_: React.MouseEvent, edge: Edge) => { onEdgeClick(edge.id) },
+    [onEdgeClick]
+  )
+
+  const handleNodeContextMenu = useCallback(
+    (e: React.MouseEvent, node: Node) => {
+      e.preventDefault()
+      onNodeRightClick(node.id, e.clientX, e.clientY)
+    },
+    [onNodeRightClick]
+  )
+
+  const handleEdgeContextMenu = useCallback(
+    (e: React.MouseEvent, edge: Edge) => {
+      e.preventDefault()
+      e.stopPropagation()
+      onEdgeRightClick(edge.id, e.clientX, e.clientY)
+    },
+    [onEdgeRightClick]
   )
 
   return (
@@ -84,6 +111,9 @@ export function BlueprintCanvas({ blueprintId }: Props) {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onEdgeClick={handleEdgeClick}
+        onNodeContextMenu={handleNodeContextMenu}
+        onEdgeContextMenu={handleEdgeContextMenu}
         fitView
       >
         <Background />
