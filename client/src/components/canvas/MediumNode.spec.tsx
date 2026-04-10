@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { SmallNode } from './SmallNode'
+import { MediumNode } from './MediumNode'
 import { NodeType, NodeSize, NodeStatus, TimeScale } from '../../types'
 import type { NodeDto } from '../../types'
 import React from 'react'
@@ -13,42 +13,36 @@ vi.mock('@xyflow/react', () => ({
 }))
 
 const baseNode: NodeDto = {
-  id: 'n-s1',
+  id: 'n-m1',
   blueprintId: 'bp-1',
   type: NodeType.ACTOR,
-  size: NodeSize.SMALL,
+  size: NodeSize.MEDIUM,
   status: NodeStatus.ACTIVE,
-  title: '小節點標題',
+  title: '中節點標題',
   description: '',
-  weight: 2.0,
-  timeScale: TimeScale.SHORT,
+  weight: 1.5,
+  timeScale: TimeScale.MEDIUM,
   createdBy: 'user',
-  parentNodeId: 'n-1',
+  parentNodeId: null,
   createdAt: '2026-01-01T00:00:00Z',
   positionX: null,
   positionY: null,
 }
 
-describe('SmallNode', () => {
+describe('MediumNode', () => {
   it('顯示節點標題和類型', () => {
-    render(<SmallNode data={baseNode} selected={false} id="n-s1" type="small" />)
-    expect(screen.getByText('小節點標題')).toBeDefined()
+    render(<MediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
+    expect(screen.getByText('中節點標題')).toBeDefined()
     expect(screen.getByText('ACTOR')).toBeDefined()
   })
 
-  it('weight 驅動 opacity（weight=2 -> opacity=0.67）', () => {
-    const { container } = render(
-      <SmallNode data={baseNode} selected={false} id="n-s1" type="small" />
-    )
-    const rootDiv = container.firstElementChild as HTMLElement
-    // weight / 3.0 = 2 / 3 ≈ 0.667
-    const opacity = parseFloat(rootDiv.style.opacity)
-    expect(opacity).toBeGreaterThan(0.6)
-    expect(opacity).toBeLessThan(0.7)
+  it('顯示 weight 值', () => {
+    render(<MediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
+    expect(screen.getByText('weight: 1.50')).toBeDefined()
   })
 
   it('渲染 target 和 source handle', () => {
-    render(<SmallNode data={baseNode} selected={false} id="n-s1" type="small" />)
+    render(<MediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
     expect(screen.getByTestId('handle-target')).toBeDefined()
     expect(screen.getByTestId('handle-source')).toBeDefined()
   })

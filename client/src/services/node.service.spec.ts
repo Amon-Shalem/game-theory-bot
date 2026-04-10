@@ -8,6 +8,7 @@ vi.mock('./api')
 const mockNode = {
   id: 'n-1', blueprintId: 'bp-1', type: NodeType.EVENT, size: NodeSize.LARGE,
   title: '測試節點', weight: 1, timeScale: TimeScale.MEDIUM,
+  positionX: null, positionY: null,
 }
 
 describe('NodeService', () => {

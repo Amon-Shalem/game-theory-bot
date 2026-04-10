@@ -53,6 +53,7 @@ const mockNode = {
   title: '節點A', status: 'ACTIVE' as any, timeScale: TimeScale.MEDIUM,
   weight: 0.5, createdBy: 'user' as const, theoryIds: [], description: '',
   parentNodeId: null, createdAt: '2026-01-01T00:00:00.000Z',
+  positionX: null, positionY: null,
 }
 
 describe('CanvasPage', () => {

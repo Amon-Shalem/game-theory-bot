@@ -21,6 +21,8 @@ const mockNode: NodeDto = {
   createdBy: 'user',
   parentNodeId: null,
   createdAt: '2026-01-01T00:00:00Z',
+  positionX: null,
+  positionY: null,
 }
 
 const mockEdge: EdgeDto = {

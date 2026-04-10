@@ -5,9 +5,10 @@ export enum NodeType {
   INTEREST = 'INTEREST',
 }
 
-/** 節點大小：業務屬性，決定是否可展開子節點 */
+/** 節點大小：業務屬性，決定連接上限與是否可展開子節點 */
 export enum NodeSize {
   SMALL = 'SMALL',
+  MEDIUM = 'MEDIUM',
   LARGE = 'LARGE',
 }
 
@@ -38,6 +39,10 @@ export interface NodeDto {
   createdBy: 'user' | 'ai'
   parentNodeId: string | null
   createdAt: string
+  /** Canvas 上的 X 座標；null 表示尚未拖拽定位 */
+  positionX: number | null
+  /** Canvas 上的 Y 座標；null 表示尚未拖拽定位 */
+  positionY: number | null
 }
 
 export interface CreateNodeDto {
@@ -56,3 +61,13 @@ export interface UpdateNodeDto {
   timeScale?: TimeScale
   status?: NodeStatus
 }
+
+/** 批次更新位置的單一項目 */
+export interface NodePositionItem {
+  id: string
+  positionX: number
+  positionY: number
+}
+
+/** PATCH /nodes/positions 的 request body */
+export type UpdateNodePositionsDto = NodePositionItem[]

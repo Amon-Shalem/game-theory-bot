@@ -12,6 +12,8 @@ import React from 'react'
 vi.mock('@xyflow/react', () => ({
   Handle: ({ type, position }: any) => <div data-testid={`handle-${type}`} />,
   Position: { Top: 'top', Bottom: 'bottom' },
+  /** useStore mock：回傳空 edges，使 isConnectable 永遠為 true（handle 可連線） */
+  useStore: (selector: (s: { edges: unknown[] }) => unknown) => selector({ edges: [] }),
 }))
 
 const baseNode: NodeDto = {
@@ -27,6 +29,8 @@ const baseNode: NodeDto = {
   createdBy: 'user',
   parentNodeId: null,
   createdAt: '2026-01-01T00:00:00Z',
+  positionX: null,
+  positionY: null,
 }
 
 describe('LargeNode', () => {
