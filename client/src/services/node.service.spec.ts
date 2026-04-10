@@ -40,4 +40,15 @@ describe('NodeService', () => {
     await NodeService.remove('n-1')
     expect(api.delete).toHaveBeenCalledWith('/nodes/n-1')
   })
+
+  it('updatePositions 呼叫 PATCH /nodes/positions', async () => {
+    const items = [{ id: 'n-1', positionX: 100, positionY: 200 }]
+    const updated = [{ ...mockNode, positionX: 100, positionY: 200 }]
+    vi.mocked(api.patch).mockResolvedValue({ data: updated })
+
+    const result = await NodeService.updatePositions(items)
+
+    expect(api.patch).toHaveBeenCalledWith('/nodes/positions', items)
+    expect(result).toEqual(updated)
+  })
 })
