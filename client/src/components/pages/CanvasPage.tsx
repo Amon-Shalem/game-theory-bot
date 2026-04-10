@@ -9,8 +9,9 @@ import { useCanvasStore } from '../../stores/canvas.store'
 import { useHistoryStore } from '../../stores/history.store'
 import {
   AddNodeCommand, AddEdgeCommand, RemoveNodeCommand, RemoveEdgeCommand, UpdateEdgeCommand,
+  MoveNodesCommand,
 } from '../../commands'
-import type { EdgeFormValues } from '../../commands'
+import type { EdgeFormValues, NodeMoveItem } from '../../commands'
 import { NodeType, NodeSize, TimeScale } from '../../types'
 import type { Connection } from '@xyflow/react'
 
@@ -134,6 +135,15 @@ export function CanvasPage() {
     setContextMenu({ type: 'edge', edgeId, x, y })
   }
 
+  /**
+   * 節點拖拽結束後建立 MoveNodesCommand 並執行（支援 undo/redo）
+   * @param items - 每個被拖拽節點的新舊位置資訊
+   */
+  const handleNodeDragStop = async (items: NodeMoveItem[]) => {
+    const { executeCommand } = useHistoryStore.getState()
+    await executeCommand(new MoveNodesCommand(items))
+  }
+
   const handleAddChild = (nodeId: string) => {
     setPendingParentNodeId(nodeId)
     setShowAddForm(true)
@@ -169,7 +179,7 @@ export function CanvasPage() {
   })()
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }} onContextMenu={e => e.preventDefault()}>
       {/* 工具列 */}
       <div style={{ padding: '8px 16px', borderBottom: '1px solid #ddd', display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button onClick={() => navigate('/')}>← 返回列表</button>
@@ -210,6 +220,7 @@ export function CanvasPage() {
             onEdgeClick={handleEdgeClick}
             onNodeRightClick={handleNodeRightClick}
             onEdgeRightClick={handleEdgeRightClick}
+            onNodeDragStop={handleNodeDragStop}
           />
         </div>
         {selectedNodeId && (
