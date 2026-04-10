@@ -59,13 +59,15 @@ export class NodeService {
    * @throws NotFoundException 若任一節點 ID 不存在
    */
   async updatePositions(items: NodePositionItem[]): Promise<NodeEntity[]> {
+    // 讀取驗證在 Mutex 外執行，與 update/remove 保持一致
+    const nodes = await Promise.all(items.map(item => this.findOne(item.id)))
+
     return this.dbWrite.write(async () => {
       const results: NodeEntity[] = []
-      for (const item of items) {
-        const node = await this.findOne(item.id)
-        node.positionX = item.positionX
-        node.positionY = item.positionY
-        results.push(await this.repo.save(node))
+      for (let i = 0; i < items.length; i++) {
+        nodes[i].positionX = items[i].positionX
+        nodes[i].positionY = items[i].positionY
+        results.push(await this.repo.save(nodes[i]))
       }
       return results
     })

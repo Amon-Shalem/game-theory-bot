@@ -129,5 +129,11 @@ describe('NodeService', () => {
         service.updatePositions([{ id: 'ghost', positionX: 0, positionY: 0 }])
       ).rejects.toThrow(NotFoundException)
     })
+
+    it('空陣列直接回傳空陣列，不呼叫任何 save', async () => {
+      const result = await service.updatePositions([])
+      expect(mockRepo.save).not.toHaveBeenCalled()
+      expect(result).toEqual([])
+    })
   })
 })
