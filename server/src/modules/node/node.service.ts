@@ -3,14 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { NodeEntity } from '../../database/entities/node.entity'
 import { DatabaseWriteService } from '../../common/database-write.service'
-import { CreateNodeDto, UpdateNodeDto, NodeSize } from '@game-theory-bot/shared'
+import { CreateNodeDto, UpdateNodeDto, NodeSize, NodePositionItem } from '@game-theory-bot/shared'
 
 /**
  * 節點業務邏輯服務
  * parentNodeId 約束規則：
- *   - LARGE 節點不可設定 parentNodeId
- *   - SMALL 節點的 parentNodeId 必須指向 LARGE 節點
- *   - 刪除 LARGE 節點時，子節點由 DB cascade 自動刪除（Entity 設定 onDelete: CASCADE）
+ *   - LARGE / MEDIUM 節點不可設定 parentNodeId（頂層節點）
+ *   - SMALL 節點的 parentNodeId 必須指向 LARGE 或 MEDIUM 節點
+ *   - 刪除 LARGE / MEDIUM 節點時，子節點由 DB cascade 自動刪除（Entity 設定 onDelete: CASCADE）
  */
 @Injectable()
 export class NodeService {
@@ -53,6 +53,25 @@ export class NodeService {
   }
 
   /**
+   * 批次更新節點 Canvas 位置
+   * @param items - 要更新的節點 ID 與位置列表
+   * @returns 更新後的節點列表
+   * @throws NotFoundException 若任一節點 ID 不存在
+   */
+  async updatePositions(items: NodePositionItem[]): Promise<NodeEntity[]> {
+    return this.dbWrite.write(async () => {
+      const results: NodeEntity[] = []
+      for (const item of items) {
+        const node = await this.findOne(item.id)
+        node.positionX = item.positionX
+        node.positionY = item.positionY
+        results.push(await this.repo.save(node))
+      }
+      return results
+    })
+  }
+
+  /**
    * 驗證 parentNodeId 的業務約束
    * @param size - 欲建立節點的大小
    * @param parentNodeId - 父節點 ID（可選）
@@ -62,15 +81,15 @@ export class NodeService {
     size: NodeSize,
     parentNodeId?: string,
   ): Promise<void> {
-    if (size === NodeSize.LARGE && parentNodeId) {
-      throw new BadRequestException('LARGE nodes cannot have a parent node')
+    if ((size === NodeSize.LARGE || size === NodeSize.MEDIUM) && parentNodeId) {
+      throw new BadRequestException(`${size} nodes cannot have a parent node`)
     }
 
     if (size === NodeSize.SMALL && parentNodeId) {
       const parent = await this.repo.findOneBy({ id: parentNodeId })
       if (!parent) throw new NotFoundException(`Parent node ${parentNodeId} not found`)
-      if (parent.size !== NodeSize.LARGE) {
-        throw new BadRequestException('Parent node must be LARGE')
+      if (parent.size !== NodeSize.LARGE && parent.size !== NodeSize.MEDIUM) {
+        throw new BadRequestException('Parent node must be LARGE or MEDIUM')
       }
     }
   }
