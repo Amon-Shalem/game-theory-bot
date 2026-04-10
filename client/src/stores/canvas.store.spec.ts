@@ -129,4 +129,19 @@ describe('useCanvasStore', () => {
     expect(useCanvasStore.getState().edges[0].direction).toBe(Direction.INHIBITS)
     expect(useCanvasStore.getState().edges[0].magnitude).toBe(Magnitude.LARGE)
   })
+
+  it('updateNodePositionsInStore 更新指定節點的 positionX/Y，其他節點不受影響', () => {
+    const node1: NodeDto = { ...mockNode, id: 'n-1', positionX: null, positionY: null }
+    const node2: NodeDto = { ...mockNode, id: 'n-2', positionX: null, positionY: null }
+    useCanvasStore.setState({ nodes: [node1, node2] })
+
+    useCanvasStore.getState().updateNodePositionsInStore([
+      { id: 'n-1', positionX: 100, positionY: 200 },
+    ])
+
+    const state = useCanvasStore.getState()
+    expect(state.nodes.find(n => n.id === 'n-1')?.positionX).toBe(100)
+    expect(state.nodes.find(n => n.id === 'n-1')?.positionY).toBe(200)
+    expect(state.nodes.find(n => n.id === 'n-2')?.positionX).toBeNull()
+  })
 })

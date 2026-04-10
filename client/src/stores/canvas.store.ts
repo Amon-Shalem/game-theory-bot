@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { NodeDto, EdgeDto, CreateNodeDto, CreateEdgeDto } from '../types'
+import { NodeDto, EdgeDto, CreateNodeDto, CreateEdgeDto, NodePositionItem } from '../types'
 import { NodeService } from '../services/node.service'
 import { EdgeService } from '../services/edge.service'
 
@@ -25,6 +25,8 @@ interface CanvasState {
   removeEdgeFromStore: (id: string) => void
   /** 純 state 操作：更新 store 中的邊（不呼叫 API） */
   updateEdgeInStore: (edge: EdgeDto) => void
+  /** 純 state 操作：批次更新節點 Canvas 位置（不呼叫 API） */
+  updateNodePositionsInStore: (positions: NodePositionItem[]) => void
 }
 
 /** 目前藍圖的畫布狀態（節點 + 連結） */
@@ -83,5 +85,12 @@ export const useCanvasStore = create<CanvasState>((set) => ({
 
   updateEdgeInStore: (edge) => set(state => ({
     edges: state.edges.map(e => e.id === edge.id ? edge : e),
+  })),
+
+  updateNodePositionsInStore: (positions) => set(state => ({
+    nodes: state.nodes.map(n => {
+      const pos = positions.find(p => p.id === n.id)
+      return pos ? { ...n, positionX: pos.positionX, positionY: pos.positionY } : n
+    }),
   })),
 }))
