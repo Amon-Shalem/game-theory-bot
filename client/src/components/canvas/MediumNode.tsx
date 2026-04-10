@@ -8,50 +8,47 @@ const TYPE_COLORS: Record<NodeType, string> = {
   [NodeType.INTEREST]: '#27AE60',
 }
 
-/** 大節點連接上限：target 4 條、source 4 條，共 8 條邊 */
-const LARGE_TARGET_LIMIT = 4
-const LARGE_SOURCE_LIMIT = 4
+/** 中節點連接上限：target 2 條、source 2 條，共 4 條邊 */
+const MEDIUM_TARGET_LIMIT = 2
+const MEDIUM_SOURCE_LIMIT = 2
 
 /**
- * 大節點元件 — 里程碑事件
- * weight 動態驅動 opacity（視覺亮度）與 fontSize（視覺大小感知）
+ * 中節點元件 — 連接上限共 4 條邊
  * isConnectable 根據現有連線數動態計算，達上限後 Handle 變為不可連線
  */
-export function LargeNode({ id, data, selected }: NodeProps) {
+export function MediumNode({ id, data, selected }: NodeProps) {
   const node = data as NodeDto
   const opacity = Math.max(0.3, Math.min(1, node.weight / 3.0))
   const borderColor = TYPE_COLORS[node.type] ?? '#888'
 
-  /** 訂閱 React Flow store 的 edges，計算此節點的現有連線數 */
   const incomingCount = useStore(s => s.edges.filter(e => e.target === id).length)
   const outgoingCount = useStore(s => s.edges.filter(e => e.source === id).length)
 
   return (
     <div style={{
       opacity,
-      padding: '12px 16px',
+      padding: '10px 14px',
       border: `2px solid ${borderColor}`,
-      borderRadius: '8px',
-      background: 'white',
-      minWidth: '140px',
-      maxWidth: '220px',
+      borderRadius: '6px',
+      background: '#fafafa',
+      minWidth: '120px',
+      maxWidth: '200px',
       boxShadow: selected ? `0 0 8px ${borderColor}` : 'none',
-      fontWeight: 'bold',
     }}>
       <Handle
         type="target"
         position={Position.Top}
-        isConnectable={incomingCount < LARGE_TARGET_LIMIT}
+        isConnectable={incomingCount < MEDIUM_TARGET_LIMIT}
       />
-      <div style={{ fontSize: '11px', color: borderColor, marginBottom: '4px' }}>{node.type}</div>
-      <div style={{ fontSize: '14px' }}>{node.title}</div>
+      <div style={{ fontSize: '10px', color: borderColor, marginBottom: '4px' }}>{node.type}</div>
+      <div style={{ fontSize: '13px', fontWeight: 500 }}>{node.title}</div>
       <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
         weight: {node.weight.toFixed(2)}
       </div>
       <Handle
         type="source"
         position={Position.Bottom}
-        isConnectable={outgoingCount < LARGE_SOURCE_LIMIT}
+        isConnectable={outgoingCount < MEDIUM_SOURCE_LIMIT}
       />
     </div>
   )

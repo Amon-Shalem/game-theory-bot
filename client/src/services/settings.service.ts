@@ -1,15 +1,27 @@
 const STORAGE_KEY = 'gtb-settings'
 
+/** 畫布背景樣式選項 */
+export type CanvasBackgroundVariant = 'none' | 'dots' | 'lines' | 'cross'
+
 export interface AppSettings {
   openRouterUrl: string
   openRouterSecret: string
   modelId: string
+  /** 畫布背景樣式：none=空白、dots=點陣、lines=方格、cross=十字 */
+  canvasBackgroundVariant: CanvasBackgroundVariant
+  /** 畫布底色（CSS hex 色碼） */
+  canvasBackgroundColor: string
+  /** 圖案顏色（點、線的 CSS hex 色碼） */
+  canvasPatternColor: string
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
   openRouterUrl: 'https://openrouter.ai/api/v1',
   openRouterSecret: '',
   modelId: 'anthropic/claude-sonnet-4',
+  canvasBackgroundVariant: 'dots',
+  canvasBackgroundColor: '#ffffff',
+  canvasPatternColor: '#aaaaaa',
 }
 
 /**
