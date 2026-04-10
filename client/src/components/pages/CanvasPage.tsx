@@ -49,6 +49,9 @@ export function CanvasPage() {
   // Context Menu
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null)
 
+  // 位置儲存錯誤狀態
+  const [positionSaveError, setPositionSaveError] = useState<string | null>(null)
+
   // 藍圖切換時清空歷史
   useEffect(() => {
     clearHistory()
@@ -141,7 +144,12 @@ export function CanvasPage() {
    */
   const handleNodeDragStop = async (items: NodeMoveItem[]) => {
     const { executeCommand } = useHistoryStore.getState()
-    await executeCommand(new MoveNodesCommand(items))
+    try {
+      await executeCommand(new MoveNodesCommand(items))
+    } catch {
+      setPositionSaveError('節點位置儲存失敗，請稍後再試')
+      setTimeout(() => setPositionSaveError(null), 3000)
+    }
   }
 
   const handleAddChild = (nodeId: string) => {
@@ -229,6 +237,24 @@ export function CanvasPage() {
           </div>
         )}
       </div>
+
+      {/* 位置儲存失敗通知 */}
+      {positionSaveError && (
+        <div style={{
+          position: 'fixed',
+          top: '16px',
+          right: '16px',
+          background: '#ff4d4f',
+          color: '#fff',
+          padding: '10px 16px',
+          borderRadius: '4px',
+          fontSize: '14px',
+          zIndex: 9999,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        }}>
+          {positionSaveError}
+        </div>
+      )}
 
       {/* Edge Settings Modal */}
       {edgeModal && (
