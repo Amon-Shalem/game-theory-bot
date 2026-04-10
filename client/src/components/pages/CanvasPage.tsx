@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { BlueprintCanvas } from '../canvas/BlueprintCanvas'
 import { NodeInfoPanel } from '../panels/NodeInfoPanel'
@@ -141,16 +141,18 @@ export function CanvasPage() {
   /**
    * 節點拖拽結束後建立 MoveNodesCommand 並執行（支援 undo/redo）
    * @param items - 每個被拖拽節點的新舊位置資訊
+   *
+   * 注意：executeCommand 內部已 catch 所有例外並回傳 false，
+   * 因此這裡改為檢查回傳的布林值，而非使用 try/catch。
    */
-  const handleNodeDragStop = async (items: NodeMoveItem[]) => {
+  const handleNodeDragStop = useCallback(async (items: NodeMoveItem[]) => {
     const { executeCommand } = useHistoryStore.getState()
-    try {
-      await executeCommand(new MoveNodesCommand(items))
-    } catch {
+    const succeeded = await executeCommand(new MoveNodesCommand(items))
+    if (!succeeded) {
       setPositionSaveError('節點位置儲存失敗，請稍後再試')
       setTimeout(() => setPositionSaveError(null), 3000)
     }
-  }
+  }, [])
 
   const handleAddChild = (nodeId: string) => {
     setPendingParentNodeId(nodeId)

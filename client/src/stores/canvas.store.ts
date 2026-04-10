@@ -87,10 +87,14 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     edges: state.edges.map(e => e.id === edge.id ? edge : e),
   })),
 
-  updateNodePositionsInStore: (positions) => set(state => ({
-    nodes: state.nodes.map(n => {
-      const pos = positions.find(p => p.id === n.id)
-      return pos ? { ...n, positionX: pos.positionX, positionY: pos.positionY } : n
-    }),
-  })),
+  updateNodePositionsInStore: (positions) => set(state => {
+    // 先建立 Map 以 O(m) 時間建表，讓後續每個節點查詢為 O(1)，整體降至 O(n+m)
+    const posMap = new Map(positions.map(p => [p.id, p]))
+    return {
+      nodes: state.nodes.map(n => {
+        const pos = posMap.get(n.id)
+        return pos ? { ...n, positionX: pos.positionX, positionY: pos.positionY } : n
+      }),
+    }
+  }),
 }))
