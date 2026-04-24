@@ -14,7 +14,7 @@ describe('settings.service', () => {
   })
 
   it('saveSettings 儲存後 getSettings 可讀取', () => {
-    saveSettings({ openRouterUrl: 'https://custom.api/v1', openRouterSecret: 'sk-test-123', modelId: 'openai/gpt-4o' })
+    saveSettings({ openRouterUrl: 'https://custom.api/v1', openRouterSecret: 'sk-test-123', modelId: 'openai/gpt-4o', canvasBackgroundVariant: 'dots', canvasBackgroundColor: '#ffffff', canvasPatternColor: '#aaaaaa' })
     const settings = getSettings()
     expect(settings.openRouterUrl).toBe('https://custom.api/v1')
     expect(settings.openRouterSecret).toBe('sk-test-123')
@@ -22,7 +22,7 @@ describe('settings.service', () => {
   })
 
   it('clearSettings 清除後回傳預設值', () => {
-    saveSettings({ openRouterUrl: 'https://custom.api/v1', openRouterSecret: 'sk-test', modelId: 'openai/gpt-4o' })
+    saveSettings({ openRouterUrl: 'https://custom.api/v1', openRouterSecret: 'sk-test', modelId: 'openai/gpt-4o', canvasBackgroundVariant: 'dots', canvasBackgroundColor: '#ffffff', canvasPatternColor: '#aaaaaa' })
     clearSettings()
     const settings = getSettings()
     expect(settings.openRouterUrl).toBe('https://openrouter.ai/api/v1')

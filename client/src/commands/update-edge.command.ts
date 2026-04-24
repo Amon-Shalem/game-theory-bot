@@ -1,23 +1,12 @@
 import type { CanvasCommand } from './canvas-command'
-import type { EdgeDto } from '../types'
 import { EdgeService } from '../services/edge.service'
 import { useCanvasStore } from '../stores/canvas.store'
 import type { Direction, Magnitude } from '../types'
 
 /**
- * EdgeFormValues：UI 表單值（不含 theoryIds，由後端保留）
+ * EdgeFormValues：UI 表單值，含 theoryIds 以支援完整 undo 還原
  */
 export interface EdgeFormValues {
-  direction: Direction
-  magnitude: Magnitude
-  reasoning: string
-}
-
-/**
- * UndoSnapshot：undo 快照，欄位皆為必填（與 UpdateEdgeDto 的 optional 欄位語義不同）。
- * theoryIds 需一同快照，確保 undo 後資料完整還原，即使 UI 不顯示此欄位。
- */
-interface UndoSnapshot {
   direction: Direction
   magnitude: Magnitude
   reasoning: string
@@ -31,8 +20,8 @@ interface UndoSnapshot {
  */
 export class UpdateEdgeCommand implements CanvasCommand {
   public readonly label: string
-  /** undo 快照包含 theoryIds，欄位皆為必填，確保完整還原 */
-  private readonly previousValues: UndoSnapshot
+  /** undo 快照：含 theoryIds 確保完整還原 */
+  private readonly previousValues: EdgeFormValues
 
   constructor(
     private readonly edgeId: string,

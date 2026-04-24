@@ -12,7 +12,7 @@ const mockNode = {
 }
 
 describe('NodeService', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('findByBlueprint 呼叫 GET /nodes 帶 blueprintId 參數', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [mockNode] })

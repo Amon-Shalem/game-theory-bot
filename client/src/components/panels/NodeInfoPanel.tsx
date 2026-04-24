@@ -1,18 +1,41 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useCanvasStore } from '../../stores/canvas.store'
 import { useHistoryStore } from '../../stores/history.store'
 import { RemoveNodeCommand } from '../../commands'
+import { ReviewService } from '../../services/review.service'
+import type { ReviewRecordDto } from '../../types'
+import { ReviewVerdict } from '../../types'
 
 interface Props {
   nodeId: string
   blueprintId: string
 }
 
-/** 點擊節點後顯示的側邊資訊面板（Plan 2 會加入 AI 功能） */
+const VERDICT_LABEL: Record<ReviewVerdict, string> = {
+  [ReviewVerdict.CONFIRMED]: '確認',
+  [ReviewVerdict.REFUTED]: '反駁',
+  [ReviewVerdict.PENDING]: '待定',
+}
+
+const VERDICT_COLOR: Record<ReviewVerdict, string> = {
+  [ReviewVerdict.CONFIRMED]: '#52c41a',
+  [ReviewVerdict.REFUTED]: '#ff4d4f',
+  [ReviewVerdict.PENDING]: '#faad14',
+}
+
+/** 點擊節點後顯示的側邊資訊面板 */
 export function NodeInfoPanel({ nodeId, blueprintId }: Props) {
   const { nodes, edges, selectNode } = useCanvasStore()
   const node = nodes.find(n => n.id === nodeId)
   const nodeEdges = edges.filter(e => e.sourceNodeId === nodeId || e.targetNodeId === nodeId)
+
+  const [reviews, setReviews] = useState<ReviewRecordDto[]>([])
+
+  useEffect(() => {
+    ReviewService.getRecords(blueprintId)
+      .then(records => setReviews(records.filter(r => r.nodeId === nodeId)))
+      .catch(() => {})
+  }, [blueprintId, nodeId])
 
   if (!node) return null
 
@@ -37,6 +60,25 @@ export function NodeInfoPanel({ nodeId, blueprintId }: Props) {
           {e.sourceNodeId === nodeId ? '→' : '←'} {e.direction} / {e.magnitude}
         </div>
       ))}
+
+      <hr />
+      <h4>回顧歷史（{reviews.length}）</h4>
+      {reviews.length === 0 && <p style={{ fontSize: '12px', color: '#aaa' }}>尚無回顧紀錄</p>}
+      {reviews.slice(0, 5).map(r => {
+        const verdict = r.verdict as ReviewVerdict
+        const delta = r.weightAfter - r.weightBefore
+        return (
+          <div key={r.id} style={{ fontSize: '12px', padding: '4px 0', borderBottom: '1px solid #f0f0f0' }}>
+            <span style={{ color: VERDICT_COLOR[verdict], fontWeight: 600, marginRight: '6px' }}>
+              {VERDICT_LABEL[verdict]}
+            </span>
+            <span style={{ color: '#888' }}>{new Date(r.reviewedAt).toLocaleDateString('zh-TW')}</span>
+            <span style={{ marginLeft: '8px', color: delta >= 0 ? '#52c41a' : '#ff4d4f' }}>
+              {delta >= 0 ? '+' : ''}{delta.toFixed(2)}
+            </span>
+          </div>
+        )
+      })}
 
       <hr />
       <button

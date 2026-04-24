@@ -19,6 +19,8 @@ const mockBp = {
   description: '描述文字',
   createdAt: '2026-01-15T00:00:00Z',
   updatedAt: '2026-01-15T00:00:00Z',
+  nodeCount: 3,
+  lastReviewedAt: null,
 }
 
 describe('BlueprintListPage', () => {

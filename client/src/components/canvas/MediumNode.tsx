@@ -1,6 +1,7 @@
 import React from 'react'
 import { Handle, Position, NodeProps, useStore } from '@xyflow/react'
 import { NodeDto, NodeType } from '../../types'
+import { getWeightVisual } from '../../utils/weight-visual'
 
 const TYPE_COLORS: Record<NodeType, string> = {
   [NodeType.ACTOR]: '#4A90D9',
@@ -17,8 +18,8 @@ const MEDIUM_SOURCE_LIMIT = 2
  * isConnectable 根據現有連線數動態計算，達上限後 Handle 變為不可連線
  */
 export function MediumNode({ id, data, selected }: NodeProps) {
-  const node = data as NodeDto
-  const opacity = Math.max(0.3, Math.min(1, node.weight / 3.0))
+  const node = data as unknown as NodeDto
+  const { opacity, scale, borderWidth, borderStyle } = getWeightVisual(node.weight)
   const borderColor = TYPE_COLORS[node.type] ?? '#888'
 
   const incomingCount = useStore(s => s.edges.filter(e => e.target === id).length)
@@ -27,8 +28,10 @@ export function MediumNode({ id, data, selected }: NodeProps) {
   return (
     <div style={{
       opacity,
+      transform: `scale(${scale})`,
+      transformOrigin: 'center',
       padding: '10px 14px',
-      border: `2px solid ${borderColor}`,
+      border: `${borderWidth}px ${borderStyle} ${borderColor}`,
       borderRadius: '6px',
       background: '#fafafa',
       minWidth: '120px',

@@ -61,7 +61,11 @@ export function BlueprintCanvas({
   onEdgeRightClick,
   onNodeDragStop,
 }: Props) {
-  const { nodes: storeNodes, edges: storeEdges, loadCanvas, selectNode } = useCanvasStore()
+  const { nodes: allNodes, edges: storeEdges, loadCanvas, selectNode, displayMode } = useCanvasStore()
+  /** displayMode 過濾：high-weight 模式只顯示 weight >= 1.0 的節點 */
+  const storeNodes = displayMode === 'high-weight'
+    ? allNodes.filter(n => n.weight >= 1.0)
+    : allNodes
 
   /** React Flow instance ref，用於計算 viewport 中心座標 */
   const reactFlowRef = useRef<ReactFlowInstance | null>(null)
@@ -90,11 +94,11 @@ export function BlueprintCanvas({
           // 若 store 有持久化位置且與 React Flow 目前位置不同（undo 後 store 被還原），以 store 為準
           if (n.positionX !== null && n.positionY !== null) {
             if (existing.position.x !== n.positionX || existing.position.y !== n.positionY) {
-              return { ...existing, position: { x: n.positionX, y: n.positionY }, data: n }
+              return { ...existing, position: { x: n.positionX, y: n.positionY }, data: n as unknown as Record<string, unknown> }
             }
           }
           // 正常情況：保留 React Flow 的拖拽位置，只更新 data
-          return { ...existing, data: n }
+          return { ...existing, data: n as unknown as Record<string, unknown> }
         }
         // 新節點：優先使用 DB 儲存的位置
         if (n.positionX !== null && n.positionY !== null) {
@@ -102,7 +106,7 @@ export function BlueprintCanvas({
             id: n.id,
             type: n.size === NodeSize.LARGE ? 'large' : n.size === NodeSize.MEDIUM ? 'medium' : 'small',
             position: { x: n.positionX, y: n.positionY },
-            data: n,
+            data: n as unknown as Record<string, unknown>,
           }
         }
         // 新節點且無儲存位置：嘗試使用 viewport 中心
@@ -122,7 +126,7 @@ export function BlueprintCanvas({
           id: n.id,
           type: n.size === NodeSize.LARGE ? 'large' : n.size === NodeSize.MEDIUM ? 'medium' : 'small',
           position,
-          data: n,
+          data: n as unknown as Record<string, unknown>,
         }
       })
     })
@@ -137,7 +141,7 @@ export function BlueprintCanvas({
       source: e.sourceNodeId,
       target: e.targetNodeId,
       type: 'causal',
-      data: e,
+      data: e as unknown as Record<string, unknown>,
     })))
   }, [storeEdges, setEdges])
 

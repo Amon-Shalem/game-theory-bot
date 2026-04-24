@@ -7,7 +7,7 @@ vi.mock('./api')
 const mockBp = { id: 'bp-1', name: '測試', description: '', createdAt: '', updatedAt: '' }
 
 describe('BlueprintService', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('findAll 呼叫 GET /blueprints', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [mockBp] })

@@ -5,6 +5,9 @@ import { NodeType, NodeSize, NodeStatus, TimeScale } from '../../types'
 import type { NodeDto } from '../../types'
 import React from 'react'
 
+// NodeProps requires many React Flow internal fields; cast for test rendering
+const TestMediumNode = MediumNode as unknown as React.ComponentType<{ id: string; data: NodeDto; selected: boolean; type: string }>
+
 vi.mock('@xyflow/react', () => ({
   Handle: ({ type }: any) => <div data-testid={`handle-${type}`} />,
   Position: { Top: 'top', Bottom: 'bottom' },
@@ -31,18 +34,18 @@ const baseNode: NodeDto = {
 
 describe('MediumNode', () => {
   it('顯示節點標題和類型', () => {
-    render(<MediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
+    render(<TestMediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
     expect(screen.getByText('中節點標題')).toBeDefined()
     expect(screen.getByText('ACTOR')).toBeDefined()
   })
 
   it('顯示 weight 值', () => {
-    render(<MediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
+    render(<TestMediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
     expect(screen.getByText('weight: 1.50')).toBeDefined()
   })
 
   it('渲染 target 和 source handle', () => {
-    render(<MediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
+    render(<TestMediumNode data={baseNode} selected={false} id="n-m1" type="medium" />)
     expect(screen.getByTestId('handle-target')).toBeDefined()
     expect(screen.getByTestId('handle-source')).toBeDefined()
   })

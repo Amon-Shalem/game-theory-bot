@@ -11,7 +11,7 @@ const mockEdge = {
 }
 
 describe('EdgeService', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('findByBlueprint 呼叫 GET /edges 帶 blueprintId 參數', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [mockEdge] })
