@@ -12,6 +12,10 @@ interface Props {
   onAddChild: (nodeId: string) => void
   /** 「刪除節點」— 由 CanvasPage 執行 RemoveNodeCommand */
   onDelete: (nodeId: string) => void
+  /** AI 展開大節點（僅 LARGE/MEDIUM 節點顯示） */
+  onAIExpand?: (nodeId: string) => void
+  /** AI 建議連結 */
+  onAISuggestEdges?: (nodeId: string) => void
 }
 
 const MENU_ITEM_STYLE: React.CSSProperties = {
@@ -39,33 +43,39 @@ export function NodeContextMenu({
   onClose,
   onAddChild,
   onDelete,
+  onAIExpand,
+  onAISuggestEdges,
 }: Props) {
+  const canExpand = nodeSize === NodeSize.LARGE || nodeSize === NodeSize.MEDIUM
+
   return (
     <ContextMenu x={x} y={y} onClose={onClose}>
       <button
         style={MENU_ITEM_STYLE}
-        onClick={() => {
-          onClose()
-          onAddChild(nodeId)
-        }}
+        onClick={() => { onClose(); onAddChild(nodeId) }}
       >
         新增子節點
       </button>
       <button
         style={MENU_ITEM_STYLE}
-        onClick={() => {
-          onClose()
-          onDelete(nodeId)
-        }}
+        onClick={() => { onClose(); onDelete(nodeId) }}
       >
         刪除節點
       </button>
-      {nodeSize === NodeSize.LARGE && (
-        <button style={DISABLED_ITEM_STYLE} disabled>
+      {canExpand && (
+        <button
+          style={onAIExpand ? MENU_ITEM_STYLE : DISABLED_ITEM_STYLE}
+          disabled={!onAIExpand}
+          onClick={() => { onClose(); onAIExpand?.(nodeId) }}
+        >
           AI 展開
         </button>
       )}
-      <button style={DISABLED_ITEM_STYLE} disabled>
+      <button
+        style={onAISuggestEdges ? MENU_ITEM_STYLE : DISABLED_ITEM_STYLE}
+        disabled={!onAISuggestEdges}
+        onClick={() => { onClose(); onAISuggestEdges?.(nodeId) }}
+      >
         AI 建議連結
       </button>
     </ContextMenu>

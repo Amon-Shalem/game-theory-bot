@@ -4,6 +4,10 @@ import { CausalEdge } from './CausalEdge'
 import { Direction, Magnitude } from '../../types'
 import type { EdgeDto } from '../../types'
 import React from 'react'
+import type { EdgeProps } from '@xyflow/react'
+
+// EdgeProps requires many React Flow internal fields; cast for test rendering
+const TestCausalEdge = CausalEdge as React.ComponentType<Partial<EdgeProps> & { id: string; data?: Record<string, unknown> }>
 
 vi.mock('@xyflow/react', () => ({
   getBezierPath: () => ['M 0 0 C 50 50 100 100 150 150'],
@@ -36,7 +40,7 @@ describe('CausalEdge', () => {
   it('PROMOTES 方向使用綠色', () => {
     const { container } = render(
       <svg>
-        <CausalEdge {...baseProps} data={baseEdge} />
+        <TestCausalEdge {...baseProps} data={baseEdge as unknown as Record<string, unknown>} />
       </svg>
     )
     const path = container.querySelector('path')
@@ -47,7 +51,7 @@ describe('CausalEdge', () => {
     const inhibitEdge = { ...baseEdge, direction: Direction.INHIBITS }
     const { container } = render(
       <svg>
-        <CausalEdge {...baseProps} data={inhibitEdge} />
+        <TestCausalEdge {...baseProps} data={inhibitEdge as unknown as Record<string, unknown>} />
       </svg>
     )
     const path = container.querySelector('path')
@@ -58,7 +62,7 @@ describe('CausalEdge', () => {
     const neutralEdge = { ...baseEdge, direction: Direction.NEUTRAL }
     const { container } = render(
       <svg>
-        <CausalEdge {...baseProps} data={neutralEdge} />
+        <TestCausalEdge {...baseProps} data={neutralEdge as unknown as Record<string, unknown>} />
       </svg>
     )
     const path = container.querySelector('path')
@@ -68,7 +72,7 @@ describe('CausalEdge', () => {
   it('無 data 時 fallback 為灰色', () => {
     const { container } = render(
       <svg>
-        <CausalEdge {...baseProps} data={undefined as any} />
+        <TestCausalEdge {...baseProps} data={undefined} />
       </svg>
     )
     const path = container.querySelector('path')

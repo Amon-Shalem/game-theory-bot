@@ -8,10 +8,11 @@ vi.mock('./api')
 const mockNode = {
   id: 'n-1', blueprintId: 'bp-1', type: NodeType.EVENT, size: NodeSize.LARGE,
   title: '測試節點', weight: 1, timeScale: TimeScale.MEDIUM,
+  positionX: null, positionY: null,
 }
 
 describe('NodeService', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => { vi.clearAllMocks() })
 
   it('findByBlueprint 呼叫 GET /nodes 帶 blueprintId 參數', async () => {
     vi.mocked(api.get).mockResolvedValue({ data: [mockNode] })
@@ -38,5 +39,16 @@ describe('NodeService', () => {
     vi.mocked(api.delete).mockResolvedValue({})
     await NodeService.remove('n-1')
     expect(api.delete).toHaveBeenCalledWith('/nodes/n-1')
+  })
+
+  it('updatePositions 呼叫 PATCH /nodes/positions', async () => {
+    const items = [{ id: 'n-1', positionX: 100, positionY: 200 }]
+    const updated = [{ ...mockNode, positionX: 100, positionY: 200 }]
+    vi.mocked(api.patch).mockResolvedValue({ data: updated })
+
+    const result = await NodeService.updatePositions(items)
+
+    expect(api.patch).toHaveBeenCalledWith('/nodes/positions', items)
+    expect(result).toEqual(updated)
   })
 })

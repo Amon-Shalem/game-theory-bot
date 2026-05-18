@@ -5,6 +5,10 @@ export interface BlueprintDto {
   description: string
   createdAt: string
   updatedAt: string
+  /** 藍圖內的節點總數 */
+  nodeCount: number
+  /** 最近一次 AI 回顧的時間（ISO 字串），從未回顧則為 null */
+  lastReviewedAt: string | null
 }
 
 export interface CreateBlueprintDto {

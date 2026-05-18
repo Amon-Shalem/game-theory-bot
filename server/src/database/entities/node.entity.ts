@@ -51,6 +51,14 @@ export class NodeEntity {
   @Column({ type: 'text', nullable: true })
   parentNodeId!: string | null
 
+  /** Canvas X 座標；null 表示尚未拖拽定位 */
+  @Column({ type: 'real', nullable: true, default: null })
+  positionX!: number | null
+
+  /** Canvas Y 座標；null 表示尚未拖拽定位 */
+  @Column({ type: 'real', nullable: true, default: null })
+  positionY!: number | null
+
   @CreateDateColumn()
   createdAt!: Date
 }

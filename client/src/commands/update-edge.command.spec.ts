@@ -18,6 +18,7 @@ const newValues: EdgeFormValues = {
   direction: Direction.INHIBITS,
   magnitude: Magnitude.LARGE,
   reasoning: '新理由',
+  theoryIds: [],
 }
 
 const updatedEdge: EdgeDto = {

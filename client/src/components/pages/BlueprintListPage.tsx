@@ -28,6 +28,7 @@ export function BlueprintListPage() {
         <h1>Game Theory Bot</h1>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button onClick={() => setShowForm(true)}>+ 新增藍圖</button>
+          <button onClick={() => navigate('/theories')}>理論管理</button>
           <button onClick={() => navigate('/settings')}>Settings</button>
         </div>
       </div>
@@ -59,12 +60,20 @@ export function BlueprintListPage() {
             style={{ padding: '16px', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer' }}
             onClick={() => navigate(`/canvas/${bp.id}`)}
           >
-            <h3>{bp.name}</h3>
-            {bp.description && <p>{bp.description}</p>}
-            <small>建立：{new Date(bp.createdAt).toLocaleDateString('zh-TW')}</small>
+            <h3 style={{ margin: '0 0 4px' }}>{bp.name}</h3>
+            {bp.description && <p style={{ margin: '0 0 8px', color: '#555', fontSize: '14px' }}>{bp.description}</p>}
+            <div style={{ fontSize: '12px', color: '#888', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <span>節點：{bp.nodeCount}</span>
+              <span>建立：{new Date(bp.createdAt).toLocaleDateString('zh-TW')}</span>
+              <span>
+                {bp.lastReviewedAt
+                  ? `上次回顧：${new Date(bp.lastReviewedAt).toLocaleDateString('zh-TW')}`
+                  : '尚未回顧'}
+              </span>
+            </div>
             <button
               onClick={e => { e.stopPropagation(); remove(bp.id) }}
-              style={{ float: 'right' }}
+              style={{ float: 'right', marginTop: '8px' }}
             >
               刪除
             </button>

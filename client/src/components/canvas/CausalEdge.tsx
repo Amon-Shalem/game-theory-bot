@@ -13,7 +13,7 @@ export function CausalEdge({
   id, sourceX, sourceY, targetX, targetY,
   sourcePosition, targetPosition, data,
 }: EdgeProps) {
-  const edge = data as EdgeDto
+  const edge = data as unknown as EdgeDto
   const [edgePath] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition })
   const color = DIRECTION_COLORS[edge?.direction] ?? '#95A5A6'
 

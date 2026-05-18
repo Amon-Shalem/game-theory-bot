@@ -22,6 +22,9 @@ describe('SettingsPage', () => {
       openRouterUrl: 'https://openrouter.ai/api/v1',
       openRouterSecret: '',
       modelId: 'anthropic/claude-sonnet-4',
+      canvasBackgroundVariant: 'dots',
+      canvasBackgroundColor: '#ffffff',
+      canvasPatternColor: '#aaaaaa',
     })
   })
 
@@ -37,6 +40,9 @@ describe('SettingsPage', () => {
       openRouterUrl: 'https://custom.api/v1',
       openRouterSecret: 'sk-existing',
       modelId: 'openai/gpt-4o',
+      canvasBackgroundVariant: 'dots',
+      canvasBackgroundColor: '#ffffff',
+      canvasPatternColor: '#aaaaaa',
     })
     render(<SettingsPage />)
     expect((screen.getByLabelText('OpenRouter API URL') as HTMLInputElement).value).toBe('https://custom.api/v1')
@@ -67,6 +73,9 @@ describe('SettingsPage', () => {
       openRouterUrl: 'https://new.api',
       openRouterSecret: 'sk-new',
       modelId: 'openai/gpt-4o',
+      canvasBackgroundVariant: 'dots',
+      canvasBackgroundColor: '#ffffff',
+      canvasPatternColor: '#aaaaaa',
     })
     expect(screen.getByText('Saved!')).toBeDefined()
   })

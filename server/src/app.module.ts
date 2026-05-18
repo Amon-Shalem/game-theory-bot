@@ -5,6 +5,8 @@ import { BlueprintModule } from './modules/blueprint/blueprint.module'
 import { NodeModule } from './modules/node/node.module'
 import { TheoryModule } from './modules/theory/theory.module'
 import { EdgeModule } from './modules/edge/edge.module'
+import { AIModule } from './modules/ai/ai.module'
+import { ReviewModule } from './modules/review/review.module'
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { EdgeModule } from './modules/edge/edge.module'
     NodeModule,
     TheoryModule,
     EdgeModule,
+    AIModule,
+    ReviewModule,
   ],
 })
 export class AppModule {}
